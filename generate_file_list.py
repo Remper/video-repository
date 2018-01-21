@@ -12,6 +12,6 @@ videos = []
 for file in s3.Bucket(args.bucket).objects.all():
     key = file.key
     if key.lower().endswith('.mp4'):
-        videos.append(key)
+        videos.append({"name": key, "size": file.size})
 
 json.dump(videos, open('manifest.json', 'w'))

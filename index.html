@@ -121,7 +121,9 @@
                     </div>
                 </div>
                 <div id="link-container" style="display: none">
-                    <div class="link-ethalon"><a data-text="link" data-href="link" href="[link]">[link]</a></div>
+                    <div class="link-ethalon">
+                        <a data-text="name" data-href="link" href="[link]" target="_blank">[link]</a>
+                        <span data-text="size" style="font-size:0.6em; color:#AAA">241MB</span></div>
                 </div>
             </div>
         </div>
@@ -153,14 +155,15 @@
                     }
 
                     shouldShow = false;
-                    console.log("Manifest size:", manifest.length);
 
                     magic.hide();
                     link_container.show();
 
                     manifest.forEach(function(ele) {
                         link_ethalon.cloneWithData({
-                            "link": "http://videos.remper.ru/"+ele
+                            "link": "http://videos.remper.ru/"+ele.name,
+                            "name": ele.name,
+                            "size": (ele.size / (1024 * 1024)).toFixed(1) + "MB"
                         })
                     });
                 });
