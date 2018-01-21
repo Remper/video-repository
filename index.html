@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video repository</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script>
+        /*
+         * jQuery ethalon pattern v1.0
+         * http://remper.ru/ethalon
+         *
+         * Copyright (c) 2012 Yaroslav Nechaev
+         * Licensed under a CC BY-SA 3.0.
+         * http://creativecommons.org/licenses/by-sa/3.0/
+         */
+        (function($) {
+            $.fn.findBack = function(selector) {
+                return this.find(selector).addBack(selector);
+            };
+            $.fn.ethalon = function() {
+                this.detach();
+                return new (function(obj) {
+                    this._ethalon = obj;
+                    this._data = null;
+                    this._target = null;
+
+                    //Loading data into the cloned object and attach
+                    this._loadData = function(target, data) {
+                        var obj = this._ethalon.clone();
+
+                        if (data) {
+                            $.each(data, function(key, value) {
+                                if (key.substring(0,1) === "_")
+                                    return;
+                                if (typeof value === "function") {
+                                    if (key.substring(0, 3) !== "get") {
+                                        obj.findBack("[data-func=\"" + key + "\"]").each(function(idx, element) {
+                                            value($(element))
+                                        });
+                                        return;
+                                    }
+                                    value = value();
+                                }
+
+                                obj.findBack("[data-text=\""+key+"\"]").html(value);
+                                obj.findBack("[data-src=\""+key+"\"]").attr("src", value);
+                                obj.findBack("[data-href=\""+key+"\"]").attr("href", value);
+                                obj.findBack("[data-value=\""+key+"\"]").attr("value", value);
+                            });
+                        }
+
+                        $(target).prepend(obj);
+                        return obj;
+                    };
+
+                    //Clone object, load default data and attach it to the target
+                    this.cloneTo = function(target) {
+                        if (!target) {
+                            if (!this._target)
+                                return this;
+                            else
+                                target = this._target;
+                        }
+
+                        return this._loadData(target, this._data);
+                    };
+
+                    //Clone object, load data and attach it to the default target
+                    this.cloneWithData = function(data) {
+                        if (!data && this._data)
+                            data = this._data;
+
+                        if (!this._target)
+                            return this;
+
+                        return this._loadData(this._target, data);
+                    };
+
+                    this.clone = function(target, data) {
+                        if (!target)
+                            return this.cloneWithData(data);
+                        if (!data)
+                            return this.cloneTo(target);
+
+                        return this._loadData(target, data);
+                    };
+
+                    //Defaults managing
+                    this.data = function(data) {
+                        this._data = data;
+
+                        return this;
+                    };
+                    this.target = function(target) {
+                        this._target = target;
+
+                        return this;
+                    };
+                    this.defaults = function(data, target) {
+                        this._data = data;
+                        this._target = target;
+
+                        return this;
+                    }
+                })(this);
+            };
+        })(jQuery);
+    </script>
+</head>
+<body>
+    <div class="container" style="margin-top: 200px">
+        <div class="row">
+            <div class="col-sm">
+                <div class="form-group row">
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control-plaintext" id="magic" value="" placeholder="Type in the magic number">
+                    </div>
+                </div>
+                <div id="link-container" style="display: none">
+                    <div class="link-ethalon"><a data-text="link" data-href="link" href="[link]">[link]</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            let manifest = [];
+            let link_container = $("#link-container");
+            let link_ethalon = $(".link-ethalon").ethalon().target(link_container);
+
+            let pipeline = $.ajax("http://videos.remper.ru/manifest.json");
+            pipeline.done(function (data) {
+                manifest = data
+            });
+
+            let magic = $("#magic");
+            let shouldShow = true;
+
+            let checkFunc = function() {
+                let val = magic.val();
+
+                if (val !== "241") {
+                    return;
+                }
+
+                pipeline.done(function() {
+                    if (!shouldShow) {
+                        return;
+                    }
+
+                    shouldShow = false;
+                    console.log("Manifest size:", manifest.length);
+
+                    magic.hide();
+                    link_container.show();
+
+                    manifest.forEach(function(ele) {
+                        link_ethalon.cloneWithData({
+                            "link": "http://videos.remper.ru/"+ele
+                        })
+                    });
+                });
+            };
+
+            magic.change(checkFunc);
+            magic.keyup(checkFunc)
+        });
+    </script>
+</body>
+</html>
