@@ -53,7 +53,7 @@
                             });
                         }
 
-                        $(target).prepend(obj);
+                        $(target).append(obj);
                         return obj;
                     };
 
@@ -110,6 +110,21 @@
             };
         })(jQuery);
     </script>
+    <style>
+        .secondary-section-container {
+            background: #f5fbff;
+            margin: 10px 0 10px 0;
+            padding: 15px;
+        }
+        .link-ethalon {
+            margin-left: 15px;
+        }
+        .main-section-container {
+            background: #fafdff;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container" style="margin-top: 200px">
@@ -121,20 +136,47 @@
                     </div>
                 </div>
                 <div id="link-container" style="display: none">
-                    <div class="link-ethalon">
-                        <a data-text="name" data-href="link" href="[link]" target="_blank">[link]</a>
-                        <span data-text="size" style="font-size:0.6em; color:#AAA">241MB</span></div>
+                    <div class="main-section-container">
+                        <h2 data-text="name">[section-name]</h2>
+                        <div class="secondary-section-container">
+                            <h3 data-text="name">[subsection-name]</h3>
+                            <div class="link-ethalon">
+                                <a data-text="name" data-href="link" href="[link]" target="_blank">[link]</a>
+                                <span data-text="size" style="font-size:0.6em; color:#AAA">241MB</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <script>
+        const test_env = false;
+        const test_manifest = [
+            {"name": "test/1stlevel.mp4", "size": 401513281},
+            {"name": "test/1stlevel2.mp4", "size": 273565200},
+            {"name": "test/subtest/2ndlevel.mp4", "size": 1249581625},
+            {"name": "test/subtest2/2ndlevel.mp4", "size": 1766868901},
+            {"name": "global.mp4", "size": 683302238},
+            {"name": "global.mp4", "size": 208178998},
+            {"name": "test2/1stlevel.mp4", "size": 279185838},
+            {"name": "test2/1stlevel2.mp4", "size": 112183216},
+            {"name": "test/subtest2/2ndlevel-2.mp4", "size": 1104035972}
+        ];
+
         $(document).ready(function() {
             let manifest = [];
             let link_container = $("#link-container");
-            let link_ethalon = $(".link-ethalon").ethalon().target(link_container);
+            let link_ethalon = $(".link-ethalon").ethalon();
+            let secondary_section_container = $(".secondary-section-container").ethalon();
+            let main_section_container = $(".main-section-container").ethalon();
 
-            let pipeline = $.ajax("http://videos.remper.ru/manifest.json");
+            let pipeline;
+            if (test_env) {
+                pipeline = $.when(test_manifest);
+            } else {
+                pipeline = $.ajax("http://videos.remper.ru/manifest.json");
+            }
             pipeline.done(function (data) {
                 manifest = data
             });
@@ -159,10 +201,32 @@
                     magic.hide();
                     link_container.show();
 
+                    let sections = {};
+                    let subsections = {};
                     manifest.forEach(function(ele) {
-                        link_ethalon.cloneWithData({
+                        let components = ele.name.split("/");
+                        let name = components[components.length-1];
+                        components = components.slice(0, -1);
+
+                        let target = link_container;
+                        if (components.length > 0) {
+                            if (!(components[0] in sections)) {
+                                sections[components[0]] = main_section_container.clone(target, {"name": components[0]});
+                            }
+                            target = sections[components[0]]
+                        }
+
+                        if (components.length > 1) {
+                            let qualifier = components[0] + "_" + components[1];
+                            if (!(qualifier in subsections)) {
+                                subsections[qualifier] = secondary_section_container.clone(target, {"name": components[1]});
+                            }
+                            target = subsections[qualifier]
+                        }
+
+                        link_ethalon.clone(target, {
                             "link": "http://videos.remper.ru/"+ele.name,
-                            "name": ele.name,
+                            "name": name,
                             "size": (ele.size / (1024 * 1024)).toFixed(1) + "MB"
                         })
                     });

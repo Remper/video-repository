@@ -11,7 +11,9 @@ s3 = boto3.resource('s3')
 videos = []
 for file in s3.Bucket(args.bucket).objects.all():
     key = file.key
-    if key.lower().endswith('.mp4'):
+
+    # Skip non .mp4 and non first-level files
+    if key.lower().endswith('.mp4') and "/" in key:
         videos.append({"name": key, "size": file.size})
 
 json.dump(videos, open('manifest.json', 'w'))
