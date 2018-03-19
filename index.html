@@ -224,10 +224,16 @@
                             target = subsections[qualifier]
                         }
 
+                        let size = ele.size / (1024 * 1024);
+                        let size_unit = "MB";
+                        if (size > 1024) {
+                            size = size / 1024;
+                            size_unit = "GB";
+                        }
                         link_ethalon.clone(target, {
                             "link": "http://videos.remper.ru/"+ele.name,
                             "name": name,
-                            "size": (ele.size / (1024 * 1024)).toFixed(1) + "MB"
+                            "size": size.toFixed(1) + size_unit
                         })
                     });
                 });
