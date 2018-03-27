@@ -112,21 +112,38 @@
     </script>
     <style>
         .secondary-section-container {
-            background: #f5fbff;
+            background: rgba(245, 251, 255, 1);
             margin: 10px 0 10px 0;
             padding: 15px;
+        }
+        body.show-cover::after {
+            content: "";
+            background: url('thumbnail.jpg') no-repeat center;
+            background-size: cover;
+            /*opacity: 0.9;*/
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            position: absolute;
+            z-index: -1;
         }
         .link-ethalon {
             margin-left: 15px;
         }
         .main-section-container {
-            background: #fafdff;
+            background: rgba(250, 253, 255, 1);
             padding: 15px;
             margin-bottom: 10px;
         }
+        #magic {
+            color: black;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.71);
+        }
     </style>
 </head>
-<body>
+<body class="show-cover">
     <div class="container" style="margin-top: 200px">
         <div class="row">
             <div class="col-sm">
@@ -199,6 +216,7 @@
                     shouldShow = false;
 
                     magic.hide();
+                    $("body").removeClass("show-cover");
                     link_container.show();
 
                     let sections = {};
